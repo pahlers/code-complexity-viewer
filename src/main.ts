@@ -1,8 +1,9 @@
 import 'toolcool-range-slider';
-import {RangeSlider} from 'toolcool-range-slider';
-import {Complexity} from './complexity';
-import {ComplexityFile} from './complexity-file';
+import { RangeSlider } from 'toolcool-range-slider';
+import { Complexity } from './complexity';
+import { ComplexityFile } from './complexity-file';
 import fileItemFactory from './file-item.factory';
+import { SizeConfig } from "./size-config";
 
 const selectFilesElement = document.querySelector('.select-files') as HTMLInputElement;
 const filesElement = document.querySelector('.files__list') as HTMLUListElement;
@@ -21,17 +22,16 @@ const mListElement = document.querySelector('.m__list') as HTMLOListElement;
 const lListElement = document.querySelector('.l__list') as HTMLOListElement;
 const xlListElement = document.querySelector('.xl__list') as HTMLOListElement;
 
+const canvasElement = document.querySelector('.slider') as HTMLCanvasElement;
+
+// Set pixels in canvas
+const {width, height} = canvasElement.getBoundingClientRect();
+canvasElement.width = width;
+canvasElement.height = height;
+
+
 let data: Complexity[] = [];
-
-interface SizeConfig {
-    min: number;
-    xs: number;
-    s: number;
-    m: number;
-    l: number;
-    max: number;
-
-}
+let plotData: Record<string, number> = {};
 
 function setRanges({min, xs, s, m, l, max}: SizeConfig) {
     rangeSliderElement.min = min;
@@ -62,6 +62,7 @@ selectFilesElement.addEventListener('change', async event => {
 
     data = files.map(file => file.data)
         .flat()
+        .filter(({file}) => file.length > 0)
         .sort((a, b) => a.score - b.score);
 
     const {count, min, max} = data
@@ -77,16 +78,26 @@ selectFilesElement.addEventListener('change', async event => {
     metaMinScoreElement.innerText = `${min}`;
     metaMaxScoreElement.innerText = `${max}`;
 
-    const step = Math.round((max - min) / 5);
+    // const step = Math.round((max - min) / 5);
+    const plotBarSize = Math.floor(max / width) * 2; // Multiply by two to be able to make the bars wider.
 
-    setRanges({
-        min,
-        xs: step,
-        s: step * 2,
-        m: step * 3,
-        l: step * 4,
-        max
-    });
+    plotData = data.reduce((acc: Record<string, number>, {score}) => {
+        const barPosition = Math.min(Math.ceil(score / plotBarSize), width);
+        const count = acc[barPosition] ?? 0;
+
+        return {...acc, [barPosition]: count + 1};
+    }, {});
+
+    console.log(plotData);
+
+    // setRanges({
+    //     min,
+    //     xs: step,
+    //     s: step * 2,
+    //     m: step * 3,
+    //     l: step * 4,
+    //     max
+    // });
 });
 
 function renderLiItem(complexity: Complexity): HTMLLIElement {
@@ -102,8 +113,6 @@ rangeSliderElement.addEventListener('change', (event: any) => {
     }
 
     const [min, xs, s, m, l, max] = event.detail.values;
-
-    console.log(event.detail.values);
 
     const {
         xsList,
@@ -155,4 +164,52 @@ rangeSliderElement.addEventListener('change', (event: any) => {
     mListElement.replaceChildren(...mItemElements);
     lListElement.replaceChildren(...lItemElements);
     xlListElement.replaceChildren(...xlItemElements);
+});
+
+const ctx = canvasElement.getContext('2d') as CanvasRenderingContext2D;
+
+let sliders = [0, width / 4, (width / 4) * 2, (width / 4) * 3, width - 2];
+
+function animationFrame() {
+    ctx.clearRect(0, 0, width, height);
+    ctx.fillStyle = 'green';
+    Object.entries(plotData).forEach(([position, count]) => {
+        if (count < 10) {
+            count = 2;
+        }
+        ctx.fillRect(Math.min(parseInt(position) * 2, width - 2), (height - count), 2, count);
+    });
+
+    ctx.fillStyle = 'black';
+
+    sliders.forEach(position => ctx.fillRect(position, 0, 2, height));
+
+    window.requestAnimationFrame(animationFrame);
+}
+
+window.requestAnimationFrame(animationFrame);
+
+let slider = -1;
+let dragging = false;
+canvasElement.addEventListener('pointermove', event => {
+    const {offsetX, buttons} = event;
+
+    if (slider === -1) {
+        slider = sliders.findIndex(x => offsetX >= x - 4 && offsetX <= x + 6);
+    }
+
+    if (slider >= 0) {
+        document.body.style.cursor = 'pointer';
+
+        dragging = (buttons === 1);
+    } else {
+        document.body.style.cursor = 'initial';
+    }
+
+    if (dragging) {
+        sliders[slider] = offsetX;
+    } else {
+        dragging = false;
+        slider = -1;
+    }
 });
