@@ -1,3 +1,4 @@
+import 'toolcool-range-slider';
 import {RangeSlider} from 'toolcool-range-slider';
 import {Complexity} from './complexity';
 import {ComplexityFile} from './complexity-file';

@@ -2,7 +2,9 @@
   "name": "compexity",
   "version": "1.0.0",
   "scripts": {
-    "start": "vite --config vite.config.ts"
+    "start": "vite --config vite.config.ts",
+    "build": "vite --config vite.config.ts build",
+    "preview": "vite --config vite.config.ts preview"
   },
   "devDependencies": {
     "typescript": "^4.9.5",
