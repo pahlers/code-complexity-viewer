@@ -1,4 +1,3 @@
-import 'toolcool-range-slider';
 import { Complexity } from './complexity';
 import { ComplexityFile } from './complexity-file';
 import fileItemFactory from './file-item.factory';
@@ -87,7 +86,7 @@ selectFilesElement.addEventListener('change', async event => {
     plotData = calculatePlotData(data, width, metaData.max);
 
     renderMetadata(metaData.count, metaData.min, metaData.max);
-    renderLists(convertToLists(data, sliders));
+    renderLists(convertToLists(data, sliders, metaData, width));
 });
 
 function renderLiItem(complexity: Complexity): HTMLLIElement {
@@ -161,28 +160,28 @@ function renderLists(lists: Record<Size, Complexity[]>) {
     xlListElement.replaceChildren(...xlItemElements);
 }
 
-canvasElement.addEventListener('pointerup', () => renderLists(convertToLists(data, sliders)));
+canvasElement.addEventListener('pointerup', () => renderLists(convertToLists(data, sliders, metaData, width)));
 
-function convertToLists(data: Complexity[], sliders: Sliders): Record<Size, Complexity[]> {
-    const [min, xs, s, m, l, max] = sliders.sliders;
+function convertToLists(data: Complexity[], sliders: Sliders, {max}: MetaData, width: number): Record<Size, Complexity[]> {
+    const [aSlider, bSlider, cSlider, dSlider, eSlider, fSlider] = sliders.sliders.map(slider => slider * (max / width));
 
     return data.reduce((acc: Record<string, (Complexity)[]>, complexity: Complexity) => {
         const {score} = complexity;
         let key;
 
-        if (score >= min && score < xs) {
+        if (score >= aSlider && score < bSlider) {
             key = 'xsList';
 
-        } else if (score >= xs && score < s) {
+        } else if (score >= bSlider && score < cSlider) {
             key = 'sList';
 
-        } else if (score >= s && score < m) {
+        } else if (score >= cSlider && score < dSlider) {
             key = 'mList';
 
-        } else if (score >= m && score < l) {
+        } else if (score >= dSlider && score < eSlider) {
             key = 'lList';
 
-        } else if (score >= l && score <= max) {
+        } else if (score >= eSlider && score <= fSlider) {
             key = 'xlList';
 
         } else {
