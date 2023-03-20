@@ -14,17 +14,29 @@ export class Sliders {
 
     #sliders: number[] = [];
 
-    constructor(parts: number, width: number) {
+    constructor(amountSliders: number, width: number) {
+        amountSliders = amountSliders - 1;
+
         this.#width = width;
-        this.#sliders = Array.from({length: parts})
-            .map((_, index) => Math.floor((width / parts) * index));
-        this.#sliders = [...this.#sliders, width]; // Add last slider
+
+        this.#sliders = Array.from({length: amountSliders})
+            .map((_, index) => Math.floor((width / amountSliders) * index));
+
+        this.#sliders = [...this.#sliders, width - 2]; // Add last slider
     }
 
-    update(slider: number, position: number) {
+    update(slider: number, position: number): void {
         if (this.#sliders[slider] !== undefined) {
             this.#sliders[slider] = position;
         }
+    }
+
+    getScores(max: number): number[] {
+        return this.#sliders.map(slider => Math.floor(slider * (max / this.#width)));
+    }
+
+    setScores(max: number, scores: number[]): void {
+        this.#sliders = scores.map(score => score / (max / this.#width));
     }
 
     static insideBoundary(left: number, right: number, offset: number): boolean {

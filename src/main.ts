@@ -1,7 +1,9 @@
+import fileItemFactory from './file-item.factory';
+import { PlotData, SliderHistogramComponent } from './slider-histogram.component';
 import { Complexity } from './complexity';
 import { ComplexityFile } from './complexity-file';
-import fileItemFactory from './file-item.factory';
-import { Sliders } from "./sliders";
+import throttle from 'lodash.throttle';
+import { ScoreFormComponent } from './score-form.component';
 
 type Size = 'xsList' | 'sList' | 'mList' | 'lList' | 'xlList';
 
@@ -26,32 +28,55 @@ const mListElement = document.querySelector('.m__list') as HTMLOListElement;
 const lListElement = document.querySelector('.l__list') as HTMLOListElement;
 const xlListElement = document.querySelector('.xl__list') as HTMLOListElement;
 
-const canvasElement = document.querySelector('.slider') as HTMLCanvasElement;
+SliderHistogramComponent.define();
+const sliderHistogram = document.querySelector('slider-histogram') as SliderHistogramComponent;
 
-// Set pixels in canvas
-let {width, height} = canvasElement.getBoundingClientRect();
-canvasElement.width = width;
-canvasElement.height = height;
+ScoreFormComponent.define();
+const scoreForm = document.querySelector('score-form') as ScoreFormComponent;
 
 let data: Complexity[] = [];
-let plotData: Record<string, number> = {};
-let metaData: MetaData = {count: 0, min: 0, max: 0};
-let sliders: Sliders = new Sliders(5, width);
-let slider = -1;
-let dragging = false;
+let plotData: PlotData = {
+    scores: [],
+    max: 0
+};
 
-function calculatePlotData(data: Complexity[], width: number, max: number): Record<string, number> {
-    const plotBarSize = Math.max(Math.floor(max / width), 1) * 2; // Multiply by two to be able to make the bars wider.
+sliderHistogram.addEventListener('update', throttle((event) => {
+    const sliders = event.detail.map((slider: number) => Math.round(slider));
 
-    return data.reduce((acc: Record<string, number>, {score}) => {
-        const barPosition = Math.min(Math.ceil(score / plotBarSize), width);
-        const count = acc[barPosition] ?? 0;
+    scoreForm.scores = sliders;
+    renderLists(convertToLists(data, sliders));
+}, 250) as EventListener);
 
-        return {...acc, [barPosition]: count + 1};
-    }, {});
+scoreForm.addEventListener('update', throttle((event) => {
+    const sliders = event.detail;
+
+    sliderHistogram.sliders = sliders;
+    renderLists(convertToLists(data, sliders));
+}, 250) as EventListener);
+
+function calculatePlotData(data: Complexity[]): PlotData {
+    return data.reduce(({scores, max}: PlotData, {score}: Complexity) => {
+        let scoreCounter = scores.find(([s]) => s === score);
+
+        if (scoreCounter) {
+            // Update counter
+            scoreCounter = [score, scoreCounter[1] + 1];
+        } else {
+            // Set counter
+            scoreCounter = [score, 1];
+        }
+
+        return {
+            scores: [
+                ...scores.filter(([s]) => s !== score),
+                scoreCounter
+            ],
+            max: max > score ? max : score
+        };
+    }, {scores: [], max: 0});
 }
 
-function renderMetadata(count: number, min: number, max: number) {
+function renderMetadata({count, min, max}: MetaData) {
     metaFileCountElement.innerText = `${count}`;
     metaMinScoreElement.innerText = `${min}`;
     metaMaxScoreElement.innerText = `${max}`;
@@ -74,7 +99,7 @@ selectFilesElement.addEventListener('change', async event => {
         .filter(({file}) => file.length > 0)
         .sort((a, b) => a.score - b.score);
 
-    metaData = data
+    const metaData = data
         .reduce(({count, min, max}, {score}) => {
             return {
                 count: count + 1,
@@ -83,10 +108,24 @@ selectFilesElement.addEventListener('change', async event => {
             };
         }, {count: 0, min: Infinity, max: 0});
 
-    plotData = calculatePlotData(data, width, metaData.max);
+    renderMetadata(metaData);
 
-    renderMetadata(metaData.count, metaData.min, metaData.max);
-    renderLists(convertToLists(data, sliders, metaData, width));
+    plotData = calculatePlotData(data);
+
+    sliderHistogram.plotData = plotData;
+    const sliders = [
+        0,
+        plotData.max / 5,
+        plotData.max / 5 * 2,
+        plotData.max / 5 * 3,
+        plotData.max / 5 * 4,
+        plotData.max
+    ];
+    sliderHistogram.sliders = sliders;
+
+    renderLists(convertToLists(data, sliders));
+    scoreForm.max = plotData.max;
+    scoreForm.scores = sliders.map((slider: number) => Math.round(slider));
 });
 
 function renderLiItem(complexity: Complexity): HTMLLIElement {
@@ -95,56 +134,6 @@ function renderLiItem(complexity: Complexity): HTMLLIElement {
 
     return itemElement;
 }
-
-function animationFrame() {
-    const ctx = canvasElement.getContext('2d') as CanvasRenderingContext2D;
-
-    ctx.clearRect(0, 0, width, height);
-    ctx.fillStyle = 'green';
-    Object.entries(plotData).forEach(([position, count]) => {
-        count = count * 2;
-        ctx.fillRect(Math.min(parseInt(position) * 2, width - 2), (height - count), 2, count);
-    });
-
-    ctx.fillStyle = 'black';
-
-    sliders.sliders.forEach(position => {
-        if (position >= width) {
-            position = width - 2;
-        }
-
-        ctx.fillRect(position, 0, 2, height)
-    });
-
-    window.requestAnimationFrame(animationFrame);
-}
-
-window.requestAnimationFrame(animationFrame);
-
-canvasElement.addEventListener('pointermove', event => {
-    const {offsetX, buttons} = event;
-    canvasElement.style.cursor = 'initial';
-
-    if (slider === -1) {
-        slider = sliders.sliders.findIndex(x => offsetX >= x - 4 && offsetX <= x + 6);
-    }
-
-    if (slider >= 0) {
-        canvasElement.style.cursor = 'grab';
-        dragging = (buttons === 1);
-    }
-
-    if (dragging) {
-        canvasElement.style.cursor = 'grabbing';
-
-        if (Sliders.insideBoundary(sliders.sliders[slider - 1] ?? 0, sliders.sliders[slider + 1] ?? width - 2, offsetX)) {
-            sliders.update(slider, offsetX);
-        }
-    } else {
-        dragging = false;
-        slider = -1;
-    }
-});
 
 function renderLists(lists: Record<Size, Complexity[]>) {
     const xsItemElements = lists.xsList.map(renderLiItem);
@@ -160,11 +149,7 @@ function renderLists(lists: Record<Size, Complexity[]>) {
     xlListElement.replaceChildren(...xlItemElements);
 }
 
-canvasElement.addEventListener('pointerup', () => renderLists(convertToLists(data, sliders, metaData, width)));
-
-function convertToLists(data: Complexity[], sliders: Sliders, {max}: MetaData, width: number): Record<Size, Complexity[]> {
-    const [aSlider, bSlider, cSlider, dSlider, eSlider, fSlider] = sliders.sliders.map(slider => slider * (max / width));
-
+function convertToLists(data: Complexity[], [aSlider, bSlider, cSlider, dSlider, eSlider, fSlider]: number[]): Record<Size, Complexity[]> {
     return data.reduce((acc: Record<string, (Complexity)[]>, complexity: Complexity) => {
         const {score} = complexity;
         let key;
@@ -188,7 +173,6 @@ function convertToLists(data: Complexity[], sliders: Sliders, {max}: MetaData, w
             return acc;
         }
 
-
         return {...acc, [key]: [...acc[key], complexity]};
     }, {
         xsList: [],
@@ -198,16 +182,3 @@ function convertToLists(data: Complexity[], sliders: Sliders, {max}: MetaData, w
         xlList: [],
     });
 }
-
-window.addEventListener('resize', () => {
-    // Set pixels in canvas
-    const rect = canvasElement.getBoundingClientRect();
-    width = rect.width;
-    height = rect.height;
-    canvasElement.width = width;
-    canvasElement.height = height;
-
-    sliders.width = width;
-
-    plotData = calculatePlotData(data, width, metaData.max);
-});

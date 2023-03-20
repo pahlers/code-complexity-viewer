@@ -2,7 +2,9 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Complexity</title>
+    <title>Code Complexity Viewer</title>
+    <script src="slider-histogram.component.ts" type="module"></script>
+    <script src="score-form.component.ts" type="module"></script>
     <script src="main.ts" type="module"></script>
     <link rel="stylesheet" href="style.scss">
 </head>
@@ -12,7 +14,10 @@
 
     <section>
         <h2>Config</h2>
-        <canvas class="slider"></canvas>
+        <slider-histogram></slider-histogram>
+        <score-form></score-form>
+
+        <p class="slider-scores"></p>
     </section>
 
     <section class="files">
