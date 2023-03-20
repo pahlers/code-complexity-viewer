@@ -114,7 +114,7 @@ selectFilesElement.addEventListener('change', async event => {
 
     sliderHistogram.plotData = plotData;
     const sliders = [
-        0,
+        1,
         plotData.max / 5,
         plotData.max / 5 * 2,
         plotData.max / 5 * 3,

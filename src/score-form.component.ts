@@ -62,7 +62,7 @@ export class ScoreFormComponent extends HTMLElement {
         const value = parseInt(target.value);
         const index = parseInt(target.dataset.index ?? '-1');
 
-        if (SliderHistogramComponent.insideBoundary(this.#scores[index - 1] ?? 0, this.#scores[index + 1] ?? this.#max, value)) {
+        if (SliderHistogramComponent.insideBoundary(this.#scores[index - 1] ?? 1, this.#scores[index + 1] ?? this.#max, value)) {
             this.#scores[index] = value;
 
             const scoreElementBefore = this.#form.querySelector(`[data-index="${index - 1}"]`);
@@ -93,7 +93,7 @@ export class ScoreFormComponent extends HTMLElement {
         const element = document.createElement('input');
         element.type = 'number';
 
-        element.min = `${list[index - 1] ?? 0}`;
+        element.min = `${list[index - 1] ?? 1}`;
         element.max = `${list[index + 1] ?? this.#max}`;
 
         element.value = `${score}`;
@@ -105,7 +105,7 @@ export class ScoreFormComponent extends HTMLElement {
     #updateScoreInputElement(score: number, index: number, list: number[]): void {
         const element = this.#form.querySelector(`[data-index="${index}"]`) as HTMLInputElement;
 
-        element.min = `${list[index - 1] ?? 0}`;
+        element.min = `${list[index - 1] ?? 1}`;
         element.max = `${list[index + 1] ?? this.#max}`;
 
         element.value = `${score}`;
