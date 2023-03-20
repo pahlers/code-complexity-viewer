@@ -10,6 +10,17 @@ body {
   padding: 0 1rem;
 }
 
+.columns {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) minmax(0, 1fr) minmax(0, 1fr) minmax(0, 1fr);
+  gap: 2em;
+  grid-auto-flow: row;
+}
+
+.columns section {
+  overflow: hidden;
+}
+
 .config {
   margin-bottom: 1rem;
 }
@@ -19,4 +30,13 @@ body {
   height: 25vw;
 
   cursor: grab;
+}
+
+.list {
+  list-style: none;
+  padding: 0;
+}
+
+.list-item{
+  padding: 0.25rem 0;
 }

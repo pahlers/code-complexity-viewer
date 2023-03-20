@@ -4,6 +4,7 @@ import { Complexity } from './complexity';
 import { ComplexityFile } from './complexity-file';
 import throttle from 'lodash.throttle';
 import { ScoreFormComponent } from './score-form.component';
+import { CenterTextOverflow } from "./center-text-overflow";
 
 type Size = 'xsList' | 'sList' | 'mList' | 'lList' | 'xlList';
 
@@ -28,6 +29,7 @@ const mListElement = document.querySelector('.m__list') as HTMLOListElement;
 const lListElement = document.querySelector('.l__list') as HTMLOListElement;
 const xlListElement = document.querySelector('.xl__list') as HTMLOListElement;
 
+CenterTextOverflow.define();
 SliderHistogramComponent.define();
 const sliderHistogram = document.querySelector('slider-histogram') as SliderHistogramComponent;
 
@@ -130,7 +132,8 @@ selectFilesElement.addEventListener('change', async event => {
 
 function renderLiItem(complexity: Complexity): HTMLLIElement {
     const itemElement = document.createElement('li');
-    itemElement.innerText = `${complexity.file} ${complexity.score}`;
+    itemElement.classList.add('list-item');
+    itemElement.innerHTML = `<center-text-overflow class="list-item-filename" title="${complexity.file} ${complexity.score} " split-at-character="/" split-from="end"></center-text-overflow>`;
 
     return itemElement;
 }
