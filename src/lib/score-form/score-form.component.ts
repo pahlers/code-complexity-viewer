@@ -1,4 +1,4 @@
-import { SliderHistogramComponent } from "./slider-histogram.component";
+import { SliderHistogramComponent } from "../slider-histogram/slider-histogram.component";
 
 export class ScoreFormComponent extends HTMLElement {
     set max(max: number) {
@@ -48,16 +48,16 @@ export class ScoreFormComponent extends HTMLElement {
     }
 
     connectedCallback(): void {
-        this.#form.addEventListener('change', event => this.#update(event));
-        this.#form.addEventListener('blur', event => this.#update(event));
+        this.#form.addEventListener('change', this.#update);
+        this.#form.addEventListener('blur', this.#update);
     }
 
     disconnectedCallback(): void {
-        this.#form.removeEventListener('change', event => this.#update(event));
-        this.#form.removeEventListener('blur', event => this.#update(event));
+        this.#form.removeEventListener('change', this.#update);
+        this.#form.removeEventListener('blur', this.#update);
     }
 
-    #update(event: Event): void {
+    #update = (event: Event): void => {
         const target = event.target as HTMLInputElement;
         const value = parseInt(target.value);
         const index = parseInt(target.dataset.index ?? '-1');

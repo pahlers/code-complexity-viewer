@@ -1,10 +1,11 @@
 import fileItemFactory from './file-item.factory';
-import { PlotData, SliderHistogramComponent } from './slider-histogram.component';
+import { SliderHistogramComponent } from './lib/slider-histogram/slider-histogram.component';
 import { Complexity } from './complexity';
 import { ComplexityFile } from './complexity-file';
 import throttle from 'lodash.throttle';
-import { ScoreFormComponent } from './score-form.component';
-import { CenterTextOverflow } from "./center-text-overflow";
+import { ScoreFormComponent } from './lib/score-form/score-form.component';
+import { CenterTextOverflow } from "./lib/center-text-overflow/center-text-overflow";
+import { PlotData } from "./lib/slider-histogram/plot.data";
 
 type Size = 'xsList' | 'sList' | 'mList' | 'lList' | 'xlList';
 

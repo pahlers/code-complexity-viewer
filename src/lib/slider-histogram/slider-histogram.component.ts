@@ -1,14 +1,6 @@
 import { Scale } from './scale';
-
-interface Rect {
-    width: number;
-    height: number;
-}
-
-export interface PlotData {
-    scores: [number, number][];
-    max: number;
-}
+import { Rect } from './rect';
+import { PlotData } from './plot.data';
 
 export class SliderHistogramComponent extends HTMLElement {
     set sliders(sliders: number[]) {
@@ -60,21 +52,19 @@ export class SliderHistogramComponent extends HTMLElement {
         this.#updateWidthAndHeight();
 
         // add events
-        this.#canvas.addEventListener('pointermove', (event) => this.#moveSlider(event));
-        // this.#canvas.addEventListener('pointerup', () => this.#emitEvent());
-        window.addEventListener('resize', () => this.#updateWidthAndHeight());
-        this.#animationFrameNumber = window.requestAnimationFrame(() => this.#animationFrame());
+        this.#canvas.addEventListener('pointermove', this.#moveSlider);
+        window.addEventListener('resize', this.#updateWidthAndHeight);
+        this.#animationFrameNumber = window.requestAnimationFrame(this.#animationFrame);
     }
 
     disconnectedCallback(): void {
         // remove events
-        this.#canvas.removeEventListener('pointermove', (event) => this.#moveSlider(event));
-        // this.#canvas.removeEventListener('pointerup', () => this.#emitEvent());
-        window.removeEventListener('resize', () => this.#updateWidthAndHeight());
+        this.#canvas.removeEventListener('pointermove', this.#moveSlider);
+        window.removeEventListener('resize', this.#updateWidthAndHeight);
         window.cancelAnimationFrame(this.#animationFrameNumber);
     }
 
-    #updateWidthAndHeight(): void {
+    #updateWidthAndHeight = (): void => {
         const {width, height} = this.#canvas.getBoundingClientRect();
         this.#boundingClientRect = {width, height};
 
@@ -83,7 +73,7 @@ export class SliderHistogramComponent extends HTMLElement {
         this.#canvas.height = height;
     }
 
-    #animationFrame(): void {
+    #animationFrame = (): void => {
         const {width, height} = this.#boundingClientRect;
         this.#ctx.clearRect(0, 0, width, height);
         this.#ctx.fillStyle = 'green';
@@ -102,7 +92,7 @@ export class SliderHistogramComponent extends HTMLElement {
         this.#animationFrameNumber = window.requestAnimationFrame(() => this.#animationFrame());
     }
 
-    #moveSlider(event: PointerEvent): void {
+    #moveSlider = (event: PointerEvent): void => {
         const {offsetX, buttons} = event;
         this.#canvas.style.cursor = 'initial';
 
