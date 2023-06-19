@@ -6,6 +6,5 @@ export default defineConfig({
         sourcemap: true,
         manifest: true,
         outDir: '../dist',
-    },
-    assetsInclude: ['**/*.html']
+    }
 });
