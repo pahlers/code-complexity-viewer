@@ -1,75 +1,76 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <title>Code Complexity Viewer</title>
-    <script src="lib/slider-histogram/slider-histogram.component.ts" type="module"></script>
-    <script src="lib/score-form/score-form.component.ts" type="module"></script>
-    <script src="lib/center-text-overflow/center-text-overflow.ts" type="module"></script>
-    <script src="main.ts" type="module"></script>
-    <link rel="stylesheet" href="style.scss">
+  <meta charset="UTF-8">
+  <title>Code Complexity Viewer</title>
+  <script src="lib/slider-histogram/slider-histogram.component.ts" type="module"></script>
+  <script src="lib/score-form/score-form.component.ts" type="module"></script>
+  <script src="lib/center-text-overflow/center-text-overflow.ts" type="module"></script>
+  <script src="main.ts" type="module"></script>
+  <link rel="stylesheet" href="style.scss">
 </head>
 <body>
 <main>
-    <h1>Complexity</h1>
+  <h1>Complexity</h1>
 
-    <section>
-        <h2>Config</h2>
-        <slider-histogram></slider-histogram>
-        <score-form></score-form>
+  <section>
+    <h2>Config</h2>
+    <slider-histogram></slider-histogram>
+    <score-form></score-form>
 
-        <p class="slider-scores"></p>
+    <p class="slider-scores"></p>
+  </section>
+
+  <section class="files">
+    <h2>Files</h2>
+    <label>Files <input class="select-files" type="file" accept="text/csv" multiple></label>
+
+    <ul class="files__list"></ul>
+
+    <template class="files__item-template">
+      <li class="files__item">
+        <span class="file-name"></span>
+        <span class="file-size"></span>
+      </li>
+    </template>
+  </section>
+
+  <section class="meta">
+    <h2>Metadata</h2>
+    <p>
+      File count: <span class="meta__file-count">-</span>;
+      Minimum score: <span class="meta__min-score">-</span>;
+      Maximum score: <span class="meta__max-score">-</span>;
+    </p>
+    <button class="export" disabled>Export</button>
+  </section>
+
+  <div class="columns">
+    <section class="xs">
+      <h2>XS</h2> <span class="amount"></span>
+      <ol class="xs__list list"></ol>
     </section>
 
-    <section class="files">
-        <h2>Files</h2>
-        <label>Files <input class="select-files" type="file" accept="text/csv" multiple></label>
-
-        <ul class="files__list"></ul>
-
-        <template class="files__item-template">
-            <li class="files__item">
-                <span class="file-name"></span>
-                <span class="file-size"></span>
-            </li>
-        </template>
+    <section class="s">
+      <h2>S</h2> <span class="amount"></span>
+      <ol class="s__list list"></ol>
     </section>
 
-    <section class="meta">
-        <h2>Metadata</h2>
-        <p>
-            File count: <span class="meta__file-count">-</span>;
-            Minimum score: <span class="meta__min-score">-</span>;
-            Maximum score: <span class="meta__max-score">-</span>;
-        </p>
+    <section class="m">
+      <h2>M</h2> <span class="amount"></span>
+      <ol class="m__list list"></ol>
     </section>
 
-    <div class="columns">
-        <section class="xs">
-            <h2>XS</h2>
-            <ol class="xs__list list"></ol>
-        </section>
+    <section class="l">
+      <h2>L</h2> <span class="amount"></span>
+      <ol class="l__list list"></ol>
+    </section>
 
-        <section class="s">
-            <h2>S</h2>
-            <ol class="s__list list"></ol>
-        </section>
-
-        <section class="m">
-            <h2>M</h2>
-            <ol class="m__list list"></ol>
-        </section>
-
-        <section class="l">
-            <h2>L</h2>
-            <ol class="l__list list"></ol>
-        </section>
-
-        <section class="xl">
-            <h2>XL</h2>
-            <ol class="xl__list list"></ol>
-        </section>
-    </div>
+    <section class="xl">
+      <h2>XL</h2> <span class="amount"></span>
+      <ol class="xl__list list"></ol>
+    </section>
+  </div>
 </main>
 </body>
 </html>

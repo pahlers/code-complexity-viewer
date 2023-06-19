@@ -4,10 +4,14 @@
   "scripts": {
     "start": "vite --config vite.config.ts",
     "build": "vite --config vite.config.ts build",
-    "preview": "vite --config vite.config.ts preview"
+    "preview": "vite --config vite.config.ts preview",
+    "lint": "eslint --ext .ts src"
   },
   "devDependencies": {
     "@types/lodash.throttle": "^4.1.7",
+    "@typescript-eslint/eslint-plugin": "^5.59.1",
+    "@typescript-eslint/parser": "^5.59.1",
+    "eslint": "^8.39.0",
     "typescript": "^5.0.2",
     "vite": "^4.1.1"
   },

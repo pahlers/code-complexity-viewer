@@ -1,6 +1,7 @@
-export interface Complexity {
-    file: string;
-    complexity: number;
-    churn: number;
-    score: number;
-}
+export type Complexity = {
+  file: string;
+  module: string;
+  complexity: number;
+  churn: number;
+  score: number;
+};

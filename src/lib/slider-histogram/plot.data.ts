@@ -1,4 +1,4 @@
-export interface PlotData {
-    scores: [number, number][];
-    max: number;
-}
+export type PlotData = {
+  scores: [number, number][];
+  max: number;
+};

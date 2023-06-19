@@ -1,33 +1,34 @@
-import { SliderHistogramComponent } from "../slider-histogram/slider-histogram.component";
+import { SliderHistogramComponent } from '../slider-histogram/slider-histogram.component';
 
 export class ScoreFormComponent extends HTMLElement {
-    set max(max: number) {
-        this.#max = max;
+  set max(max: number) {
+    this.#max = max;
+  }
+
+  set scores(scores: number[]) {
+    this.#scores = [...scores].sort((a, b) => a - b);
+
+    if (this.#form.hasChildNodes()) {
+      this.#scores.forEach((score: number, index: number, list: number[]) => this.#updateScoreInputElement(score, index, list));
+
+    } else {
+      this.#form.replaceChildren(...this.#scores.map((score: number, index: number, list: number[]) => this.#renderScoreInputElement(score, index, list)));
     }
+  }
 
-    set scores(scores: number[]) {
-        this.#scores = [...scores].sort((a, b) => a - b);
+  #form: HTMLFormElement;
+  #shadowRoot: ShadowRoot;
 
-        if (this.#form.hasChildNodes()) {
-            this.#scores.forEach((score: number, index: number, list: number[]) => this.#updateScoreInputElement(score, index, list));
+  #scores: number[] = [];
+  #max = 0;
 
-        } else {
-            this.#form.replaceChildren(...this.#scores.map((score: number, index: number, list: number[]) => this.#renderScoreInputElement(score, index, list)));
-        }
-    }
+  constructor() {
+    super();
 
-    #form: HTMLFormElement;
-    #root: ShadowRoot;
+    const template = document.createElement('form');
 
-    #scores: number[] = [];
-    #max = 0;
-
-    constructor() {
-        super();
-
-        const template = document.createElement('form');
-
-        const css = `
+    const sheet = new CSSStyleSheet();
+    sheet.replaceSync(`
         :host{
             display: block;
         }
@@ -38,80 +39,79 @@ export class ScoreFormComponent extends HTMLElement {
         input {
             flex-grow: 1;
         }
-        `;
-        const cssElement = document.createElement('style');
-        cssElement.textContent = css;
+        `);
 
-        this.#root = this.attachShadow({mode: 'open'});
-        this.#root.append(cssElement, template.cloneNode(true));
-        this.#form = this.#root.querySelector('form') as HTMLFormElement;
+    this.#shadowRoot = this.attachShadow({mode: 'open'});
+    this.#shadowRoot.adoptedStyleSheets = [sheet];
+    this.#shadowRoot.append(template.cloneNode(true));
+    this.#form = this.#shadowRoot.querySelector('form') as HTMLFormElement;
+  }
+
+  connectedCallback(): void {
+    this.#form.addEventListener('change', this.#update);
+    this.#form.addEventListener('blur', this.#update);
+  }
+
+  disconnectedCallback(): void {
+    this.#form.removeEventListener('change', this.#update);
+    this.#form.removeEventListener('blur', this.#update);
+  }
+
+  #update = (event: Event): void => {
+    const target = event.target as HTMLInputElement;
+    const value = parseInt(target.value);
+    const index = parseInt(target.dataset.index ?? '-1');
+
+    if (SliderHistogramComponent.insideBoundary(this.#scores[index - 1] ?? 1, this.#scores[index + 1] ?? this.#max, value)) {
+      this.#scores[index] = value;
+
+      const scoreElementBefore = this.#form.querySelector(`[data-index="${index - 1}"]`);
+
+      if (scoreElementBefore) {
+        (scoreElementBefore as HTMLInputElement).max = `${value}`;
+      }
+
+      const scoreElementAfter = this.#form.querySelector(`[data-index="${index + 1}"]`);
+
+      if (scoreElementAfter) {
+        (scoreElementAfter as HTMLInputElement).min = `${value}`;
+      }
     }
 
-    connectedCallback(): void {
-        this.#form.addEventListener('change', this.#update);
-        this.#form.addEventListener('blur', this.#update);
-    }
+    this.#emitEvent(this.#scores);
+  }
 
-    disconnectedCallback(): void {
-        this.#form.removeEventListener('change', this.#update);
-        this.#form.removeEventListener('blur', this.#update);
-    }
+  #emitEvent(scores: number[]): void {
+    const updateEvent = new CustomEvent('update', {
+      detail: [...scores]
+    });
 
-    #update = (event: Event): void => {
-        const target = event.target as HTMLInputElement;
-        const value = parseInt(target.value);
-        const index = parseInt(target.dataset.index ?? '-1');
+    this.dispatchEvent(updateEvent);
+  }
 
-        if (SliderHistogramComponent.insideBoundary(this.#scores[index - 1] ?? 1, this.#scores[index + 1] ?? this.#max, value)) {
-            this.#scores[index] = value;
+  #renderScoreInputElement(score: number, index: number, list: number[]): HTMLInputElement {
+    const element = document.createElement('input');
+    element.type = 'number';
 
-            const scoreElementBefore = this.#form.querySelector(`[data-index="${index - 1}"]`);
+    element.min = `${list[index - 1] ?? 1}`;
+    element.max = `${list[index + 1] ?? this.#max}`;
 
-            if (scoreElementBefore) {
-                (scoreElementBefore as HTMLInputElement).max = `${value}`;
-            }
+    element.value = `${score}`;
+    element.dataset.index = `${index}`;
 
-            const scoreElementAfter = this.#form.querySelector(`[data-index="${index + 1}"]`);
+    return element;
+  }
 
-            if (scoreElementAfter) {
-                (scoreElementAfter as HTMLInputElement).min = `${value}`;
-            }
-        }
+  #updateScoreInputElement(score: number, index: number, list: number[]): void {
+    const element = this.#form.querySelector(`[data-index="${index}"]`) as HTMLInputElement;
 
-        this.#emitEvent(this.#scores);
-    }
+    element.min = `${list[index - 1] ?? 1}`;
+    element.max = `${list[index + 1] ?? this.#max}`;
 
-    #emitEvent(scores: number[]): void {
-        const updateEvent = new CustomEvent('update', {
-            detail: [...scores]
-        });
+    element.value = `${score}`;
+  }
 
-        this.dispatchEvent(updateEvent);
-    }
-
-    #renderScoreInputElement(score: number, index: number, list: number[]): HTMLInputElement {
-        const element = document.createElement('input');
-        element.type = 'number';
-
-        element.min = `${list[index - 1] ?? 1}`;
-        element.max = `${list[index + 1] ?? this.#max}`;
-
-        element.value = `${score}`;
-        element.dataset.index = `${index}`;
-
-        return element;
-    }
-
-    #updateScoreInputElement(score: number, index: number, list: number[]): void {
-        const element = this.#form.querySelector(`[data-index="${index}"]`) as HTMLInputElement;
-
-        element.min = `${list[index - 1] ?? 1}`;
-        element.max = `${list[index + 1] ?? this.#max}`;
-
-        element.value = `${score}`;
-    }
-
-    static define() {
-        window.customElements.define('score-form', ScoreFormComponent);
-    }
+  static define() {
+    window.customElements.define('score-form', ScoreFormComponent);
+  }
 }
