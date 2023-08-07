@@ -37,7 +37,7 @@ export class CenterTextOverflow extends HTMLElement {
   }
 
   connectedCallback(): void {
-    const text = this.getAttribute('title')?.valueOf() ?? '';
+    const text = this.getAttribute('label')?.valueOf() ?? '';
     let splitIndex = 0;
 
     if (this.hasAttribute('split-at-part')) {
@@ -70,8 +70,8 @@ export class CenterTextOverflow extends HTMLElement {
       }
     }
 
-    this.#left.innerText = text.slice(0, splitIndex);
-    this.#right.innerText = text.slice(splitIndex);
+    this.#left.textContent = text.slice(0, splitIndex);
+    this.#right.textContent = text.slice(splitIndex);
   }
 
   static define() {

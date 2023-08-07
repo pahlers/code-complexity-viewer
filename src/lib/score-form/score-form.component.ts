@@ -93,7 +93,7 @@ export class ScoreFormComponent extends HTMLElement {
     const element = document.createElement('input');
     element.type = 'number';
 
-    element.min = `${list[index - 1] ?? 1}`;
+    element.min = `${list[index - 1] ?? 0}`;
     element.max = `${list[index + 1] ?? this.#max}`;
 
     element.value = `${score}`;
@@ -105,7 +105,7 @@ export class ScoreFormComponent extends HTMLElement {
   #updateScoreInputElement(score: number, index: number, list: number[]): void {
     const element = this.#form.querySelector(`[data-index="${index}"]`) as HTMLInputElement;
 
-    element.min = `${list[index - 1] ?? 1}`;
+    element.min = `${list[index - 1] ?? 0}`;
     element.max = `${list[index + 1] ?? this.#max}`;
 
     element.value = `${score}`;

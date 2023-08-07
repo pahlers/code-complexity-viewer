@@ -1,4 +1,4 @@
-import { Complexity } from './complexity';
+import { Complexity, ComplexityFileData } from './complexity';
 
 export class ComplexityFile {
   get size(): number {
@@ -32,19 +32,37 @@ export class ComplexityFile {
 
   async parse(): Promise<this> {
     this.#text = await this.#file.text();
-    this.#valid = this.#text.startsWith('file,complexity,churn,score');
 
-    this.#data = this.#text.split('\n')
-      .filter(row => !row.startsWith('file,complexity,churn,score')) // remove header
-      .map(row => row.split(','))
-      .map(([file, complexity, churn, score]): Complexity => ({
-          file,
-          module: this.#name,
-          complexity: parseInt(complexity),
-          churn: parseInt(churn),
-          score: parseInt(score)
-        })
-      );
+    try {
+      this.#data = (JSON.parse(this.#text) as ComplexityFileData[])
+        .map((metrics): Complexity => {
+            const {
+              path: file,
+              maintainability: {maximum: {volume = 0, cyclomatic = 0}, sloc = 0},
+            } = metrics;
+
+            const score = sloc === 0 ? 0 : (5.2 * Math.log2(volume)) + (0.23 * cyclomatic) + (16.2 * Math.log2(sloc));
+
+            return {
+              file,
+              module: this.#name,
+              maintainability: {
+                score,
+                volume,
+                cyclomatic,
+                sloc
+              },
+              _metrics: metrics
+            };
+          }
+        );
+
+      this.#valid = true;
+    } catch (error) {
+      console.error('[ComplexityFile] parse', error);
+
+      this.#valid = false;
+    }
 
     return this;
   }

@@ -11,6 +11,7 @@ type Size = 'xs' | 's' | 'm' | 'l' | 'xl';
 
 type MetaData = {
   count: number;
+  sloc: number;
   min: number;
   max: number;
 };
@@ -22,6 +23,7 @@ const fileTemplateElement = document.querySelector('.files__item-template') as H
 const renderFileItem = fileItemFactory(fileTemplateElement);
 
 const metaFileCountElement = document.querySelector('.meta__file-count') as HTMLSpanElement;
+const metaSlocElement = document.querySelector('.meta__sloc') as HTMLSpanElement;
 const metaMinScoreElement = document.querySelector('.meta__min-score') as HTMLSpanElement;
 const metaMaxScoreElement = document.querySelector('.meta__max-score') as HTMLSpanElement;
 
@@ -65,7 +67,7 @@ scoreForm.addEventListener('update', throttle((event) => {
 }, 250) as EventListener);
 
 function calculatePlotData(data: Complexity[]): PlotData {
-  return data.reduce(({scores, max}: PlotData, {score}: Complexity) => {
+  return data.reduce(({scores, max}: PlotData, {maintainability: {score}}: Complexity) => {
     let scoreCounter = scores.find(([s]) => s === score);
 
     if (scoreCounter) {
@@ -86,16 +88,17 @@ function calculatePlotData(data: Complexity[]): PlotData {
   }, {scores: [], max: 0});
 }
 
-function renderMetadata({count, min, max}: MetaData) {
-  metaFileCountElement.innerText = `${count}`;
-  metaMinScoreElement.innerText = `${min}`;
-  metaMaxScoreElement.innerText = `${max}`;
+function renderMetadata({count, min, max, sloc}: MetaData) {
+  metaFileCountElement.textContent = `${count}`;
+  metaSlocElement.textContent = `${sloc}`;
+  metaMinScoreElement.textContent = `${Math.round(min)}`;
+  metaMaxScoreElement.textContent = `${Math.round(max)}`;
 }
 
 selectFilesElement.addEventListener('change', async event => {
   const target = event.target as HTMLInputElement;
   const rawFiles = [...(target.files as FileList)]
-    .filter(({type}) => type === 'text/csv')
+    .filter(({type}) => type === 'application/json')
     .map(file => new ComplexityFile(file))
     .map(async file => await file.parse());
 
@@ -107,16 +110,17 @@ selectFilesElement.addEventListener('change', async event => {
   data = files.map(file => file.data)
     .flat()
     .filter(({file}) => file.length > 0)
-    .sort((a, b) => a.score - b.score);
+    .sort((a, b) => a.maintainability.score - b.maintainability.score);
 
   const metaData = data
-    .reduce(({count, min, max}, {score}) => {
+    .reduce(({count, min, max, sloc}, {maintainability: {score, sloc: slocFile}}) => {
       return {
         count: count + 1,
         min: score < min ? score : min,
-        max: score > max ? score : max
+        max: score > max ? score : max,
+        sloc: sloc + slocFile
       };
-    }, {count: 0, min: Infinity, max: 0});
+    }, {count: 0, min: Infinity, max: 0, sloc: 0});
 
   renderMetadata(metaData);
 
@@ -124,7 +128,7 @@ selectFilesElement.addEventListener('change', async event => {
 
   sliderHistogram.plotData = plotData;
   const sliders = [
-    1,
+    0,
     plotData.max / 5,
     plotData.max / 5 * 2,
     plotData.max / 5 * 3,
@@ -141,9 +145,26 @@ selectFilesElement.addEventListener('change', async event => {
 });
 
 function renderLiItem(complexity: Complexity): HTMLLIElement {
+  const {score, volume, cyclomatic, sloc} = complexity.maintainability;
+  const title = `${complexity.file}
+Module: ${complexity.module}
+
+Score: ${Math.round(score)}
+Halstead volume: ${volume ?? 'not available'}
+Cyclomatic Complexity: ${cyclomatic ?? 'not available'}
+Source lines of code: ${sloc ?? 'not available'}`;
+
   const itemElement = document.createElement('li');
   itemElement.classList.add('list-item');
-  itemElement.innerHTML = `<center-text-overflow class="list-item-filename" title="${complexity.file} ${complexity.score}" split-at-character="/" split-from="end"></center-text-overflow>`;
+
+  const centerTextOverflowElement = document.createElement('center-text-overflow');
+  centerTextOverflowElement.classList.add('list-item-filename');
+  centerTextOverflowElement.setAttribute('title', title);
+  centerTextOverflowElement.setAttribute('label', `${complexity.file} ${Math.round(score)}`);
+  centerTextOverflowElement.setAttribute('split-at-character', '/');
+  centerTextOverflowElement.setAttribute('split-from', 'end');
+
+  itemElement.appendChild(centerTextOverflowElement);
 
   return itemElement;
 }
@@ -161,16 +182,16 @@ function renderLists(lists: Record<Size, Complexity[]>) {
   lListElement.replaceChildren(...lItemElements);
   xlListElement.replaceChildren(...xlItemElements);
 
-  xsAmountElement.innerText = `${lists.xs.length} files`;
-  sAmountElement.innerText = `${lists.s.length} files`;
-  mAmountElement.innerText = `${lists.m.length} files`;
-  lAmountElement.innerText = `${lists.l.length} files`;
-  xlAmountElement.innerText = `${lists.xl.length} files`;
+  xsAmountElement.textContent = `${lists.xs.length} files`;
+  sAmountElement.textContent = `${lists.s.length} files`;
+  mAmountElement.textContent = `${lists.m.length} files`;
+  lAmountElement.textContent = `${lists.l.length} files`;
+  xlAmountElement.textContent = `${lists.xl.length} files`;
 }
 
 function convertToLists(data: Complexity[], [aSlider, bSlider, cSlider, dSlider, eSlider, fSlider]: number[]): Record<Size, Complexity[]> {
   return data.reduce((acc: Record<string, (Complexity)[]>, complexity: Complexity) => {
-    const {score} = complexity;
+    const {maintainability: {score}} = complexity;
     let key: Size;
 
     if (score >= aSlider && score < bSlider) {

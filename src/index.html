@@ -25,7 +25,7 @@
 
   <section class="files">
     <h2>Files</h2>
-    <label>Files <input class="select-files" type="file" accept="text/csv" multiple></label>
+    <label>Files <input class="select-files" type="file" accept="application/json" multiple></label>
 
     <ul class="files__list"></ul>
 
@@ -41,8 +41,13 @@
     <h2>Metadata</h2>
     <p>
       File count: <span class="meta__file-count">-</span>;
+      Source lines of code: <span class="meta__sloc">-</span>;
       Minimum score: <span class="meta__min-score">-</span>;
       Maximum score: <span class="meta__max-score">-</span>;
+    </p>
+
+    <p>
+      Maintainability is metric for software maintainability. Made Microsoft inc. Low is good, High is bad metrics.
     </p>
     <button class="export" disabled>Export</button>
   </section>
