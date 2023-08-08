@@ -2,6 +2,8 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self'; style-src-elem 'self' 'sha256-PxH0pazUoMIymqVmO0eornZCpO2hUeOd3wl62xxYsNQ=' 'sha256-13Cy7O2aFN5IJgtA6gk7zeNy0ScCP/vaK+4wyGqrd+4='" />
+
   <title>Code Complexity Viewer</title>
 
   <script src="lib/slider-histogram/slider-histogram.component.ts" type="module"></script>
@@ -13,7 +15,7 @@
 </head>
 <body>
 <main>
-  <h1>Complexity</h1>
+  <h1>Code Complexity Viewer</h1>
 
   <section>
     <h2>Config</h2>
@@ -47,7 +49,8 @@
     </p>
 
     <p>
-      Maintainability is metric for software maintainability. Made Microsoft inc. Low is good, High is bad metrics.
+      The maintainability index (score) is a metric for software maintainability. Inspired by Microsoft inc. Low is good, high is bad.<br>
+      Everything above 80 is considered difficult to maintain.
     </p>
     <button class="export" disabled>Export</button>
   </section>

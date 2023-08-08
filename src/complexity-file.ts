@@ -41,7 +41,7 @@ export class ComplexityFile {
               maintainability: {maximum: {volume = 0, cyclomatic = 0}, sloc = 0},
             } = metrics;
 
-            const score = sloc === 0 ? 0 : (5.2 * Math.log2(volume)) + (0.23 * cyclomatic) + (16.2 * Math.log2(sloc));
+            const score = sloc === 0 ? 0 : (5.2 * Math.log(volume)) + (0.23 * cyclomatic) + (16.2 * Math.log(sloc));
 
             return {
               file,
